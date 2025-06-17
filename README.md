@@ -1,0 +1,843 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Dunya Life Simulator</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <style>
+        .hidden { display: none; }
+        .locked { pointer-events: none; opacity: 0.5; }
+    </style>
+</head>
+<body class="bg-gray-100 min-h-screen flex flex-col">
+<!-- AUDIO: UI and Event Sounds -->
+    <audio id="tab-sound" src="https://cdn.pixabay.com/audio/2023/06/18/audio_12d526e74e.mp3" preload="auto"></audio>
+    <audio id="error-sound" src="https://cdn.pixabay.com/audio/2022/07/26/audio_124b3d2c0d.mp3" preload="auto"></audio>
+    <audio id="cough-sound" src="https://cdn.pixabay.com/audio/2021/12/22/audio_10a0a0b8a0.mp3" preload="auto"></audio>
+    <audio id="rooster-sound" src="https://cdn.pixabay.com/audio/2022/03/15/audio_115b9b3a3b.mp3" preload="auto"></audio>
+    <audio id="siren-sound" src="https://cdn.pixabay.com/audio/2022/03/15/audio_115b9b3a3b.mp3" preload="auto"></audio>
+    <audio id="salah-sound" src="https://cdn.pixabay.com/audio/2023/01/18/audio_12f5487c93.mp3" preload="auto"></audio>
+    <header class="bg-blue-600 text-white p-4 text-center text-2xl font-bold">Dunya Simulation Game</header>
+    <main class="flex flex-1">
+        <!-- Sidebar -->
+        <aside id="sidebar" class="w-64 bg-gray-800 text-white p-4 space-y-4 locked">
+            <h2 class="text-xl font-bold">Navigation</h2>
+            <nav>
+                <ul>
+                    <li><button onclick="openMenu('housing-options')" class="w-full text-left py-2 px-4 rounded hover:bg-gray-700">Housing</button></li>
+                    <li><button onclick="openMenu('work-options')" class="w-full text-left py-2 px-4 rounded hover:bg-gray-700">Work</button></li>
+                    <li><button onclick="openMenu('side-hustles-options')" class="w-full text-left py-2 px-4 rounded hover:bg-gray-700">Side Hustles</button></li>
+                    <li><button onclick="openMenu('crime-options')" class="w-full text-left py-2 px-4 rounded hover:bg-gray-700">Crime</button></li>
+                    <li><button onclick="openMenu('food-options')" class="w-full text-left py-2 px-4 rounded hover:bg-gray-700">Food</button></li>
+                    <li><button onclick="openMenu('store-options')" class="w-full text-left py-2 px-4 rounded hover:bg-gray-700">Store</button></li>
+                    <li><button onclick="openMenu('school-options')" class="w-full text-left py-2 px-4 rounded hover:bg-gray-700">School</button></li>
+                    <li><button onclick="openMenu('sanity-options')" class="w-full text-left py-2 px-4 rounded hover:bg-gray-700">Sanity</button></li>
+                    <li><button onclick="openMenu('business-options')" class="w-full text-left py-2 px-4 rounded hover:bg-gray-700">Business</button></li>
+                    <li><button onclick="openMenu('office-options')" class="w-full text-left py-2 px-4 rounded hover:bg-gray-700">Office</button></li>
+                </ul>
+            </nav>
+        </aside>
+        <section class="flex-1 p-8">
+            <div id="create-user" class="space-y-4">
+                <h2 class="text-2xl font-bold">Create Your Character</h2>
+                <div>
+                    <label for="username" class="block text-lg font-semibold">Enter Your Name:</label>
+                    <input id="username" type="text" class="w-full border rounded p-2" placeholder="Your name...">
+                </div>
+                <button id="start-game" class="bg-blue-600 text-white py-2 px-4 rounded hover:bg-blue-700">Start Game</button>
+            </div>
+            <div id="gameplay" class="hidden">
+                <h2 class="text-2xl font-bold">Welcome to Your Life!</h2>
+                <div id="user-display" class="mt-4">
+                    <h3 class="text-lg font-bold">Character: <span id="user-name"></span></h3>
+                    <div class="mt-4 bg-gray-100 p-4 rounded border">
+                        <h4 class="font-bold text-lg">Stats</h4>
+                        <p class="text-xl">Day: <span id="day-counter">1</span></p>
+                        <p class="text-xl">Money: <span id="money-balance">$100</span></p>
+                        <p class="text-xl">Health: <span id="health-level">100</span>/100</p>
+                        <p class="text-xl">Sanity: <span id="sanity-level">100</span>/100</p>
+                        <p class="text-xl">Notoriety: <span id="notoriety-level">0</span>/100</p>
+                    </div>
+                    <div id="backpack-display" class="mt-4 bg-gray-100 p-4 rounded border">
+                        <h4 class="font-bold text-lg">Backpack</h4>
+                        <ul id="backpack-list" class="list-disc ml-6"></ul>
+                    </div>
+                    <div id="education-display" class="mt-4 bg-gray-100 p-4 rounded border">
+                        <h4 class="font-bold text-lg">Education</h4>
+                        <ul id="education-list" class="list-disc ml-6"></ul>
+                    </div>
+                </div>
+            </div>
+
+            <!-- HOUSING -->
+            <div id="housing-options" class="hidden mt-4 bg-gray-100 p-4 rounded border">
+                <h4 class="font-bold text-lg">Choose Your Housing</h4>
+                <ul class="space-y-2">
+                    <li><button class="w-full text-left py-2 px-4 rounded hover:bg-gray-300" onclick="chooseHousing('Streets', 0, null)">Streets (Free)</button></li>
+                    <li><button class="w-full text-left py-2 px-4 rounded hover:bg-gray-300" onclick="chooseHousing('Tent', 20, 'Tent')">Tent ($20, purchase from Store)</button></li>
+                    <li><button class="w-full text-left py-2 px-4 rounded hover:bg-gray-300" onclick="chooseHousing('Motel', 50, null)">Motel ($50)</button></li>
+                    <li><button class="w-full text-left py-2 px-4 rounded hover:bg-gray-300" onclick="chooseHousing('Hotel', 100, null)">Hotel ($100)</button></li>
+                    <li><button class="w-full text-left py-2 px-4 rounded hover:bg-gray-300" onclick="chooseHousing('Roommate', 200, null)">Roommate ($200)</button></li>
+                    <li><button class="w-full text-left py-2 px-4 rounded hover:bg-gray-300" onclick="chooseHousing('Apartment', 3000, null)">Apartment ($3,000)</button></li>
+                    <li><button class="w-full text-left py-2 px-4 rounded hover:bg-gray-300" onclick="chooseHousing('House', 25000, null)">House ($25,000)</button></li>
+                    <li><button class="w-full text-left py-2 px-4 rounded hover:bg-gray-300" onclick="chooseHousing('Mansion', 500000, null)">Mansion ($500,000)</button></li>
+                </ul>
+                <button class="mt-4 w-full text-left py-2 px-4 bg-blue-500 text-white rounded hover:bg-blue-600" onclick="sleep()">Sleep (Restore Health, Pass Day)</button>
+            </div>
+
+            <!-- TRANSPORTATION (not menu-tabbed, just for store) -->
+            <div id="transportation-options" class="hidden mt-4 bg-gray-100 p-4 rounded border">
+                <h4 class="font-bold text-lg">Purchase Transportation</h4>
+                <ul class="space-y-2">
+                    <li><button class="w-full text-left py-2 px-4 rounded hover:bg-gray-300" onclick="purchaseTransportation('Bike', 100)">Bike ($100)</button></li>
+                    <li><button class="w-full text-left py-2 px-4 rounded hover:bg-gray-300" onclick="purchaseTransportation('Car', 1000)">Car ($1000)</button></li>
+                </ul>
+            </div>
+
+            <!-- WORK -->
+            <div id="work-options" class="hidden mt-4 bg-gray-100 p-4 rounded border">
+                <h4 class="font-bold text-lg">Choose Your Job</h4>
+                <ul class="space-y-2">
+                    <li><button class="w-full text-left py-2 px-4 rounded hover:bg-gray-300" onclick="chooseJob('Retail', 50, 'High School')">Retail (Requires High School, $50/day)</button></li>
+                    <li><button class="w-full text-left py-2 px-4 rounded hover:bg-gray-300" onclick="chooseJob('Office Work', 100, 'College')">Office Work (Requires College, $100/day)</button></li>
+                    <li><button class="w-full text-left py-2 px-4 rounded hover:bg-gray-300" onclick="chooseJob('Freelancing', 150, 'Laptop')">Freelancing (Requires Laptop, $150/day)</button></li>
+                    <li><button class="w-full text-left py-2 px-4 rounded hover:bg-gray-300" onclick="chooseJob('Tech Industry', 300, ['College', 'Laptop'])">Tech Industry (Requires College and Laptop, $300/day)</button></li>
+                    <li><button class="w-full text-left py-2 px-4 rounded hover:bg-gray-300" onclick="chooseJob('Healthcare', 250, 'University')">Healthcare (Requires University, $250/day)</button></li>
+                </ul>
+            </div>
+
+            <!-- SIDE HUSTLES -->
+            <div id="side-hustles-options" class="hidden mt-4 bg-gray-100 p-4 rounded border">
+                <h4 class="font-bold text-lg">Choose Your Side Hustle</h4>
+                <ul class="space-y-2">
+                    <li><button class="w-full text-left py-2 px-4 rounded hover:bg-gray-300" onclick="handleSideHustle('Ride Sharing', 100, 'Car')">Ride Sharing (Requires Car, $100/day)</button></li>
+                    <li><button class="w-full text-left py-2 px-4 rounded hover:bg-gray-300" onclick="handleSideHustle('Food Delivery', 50, 'Bike')">Food Delivery (Requires Bike, $50/day)</button></li>
+                    <li><button class="w-full text-left py-2 px-4 rounded hover:bg-gray-300" onclick="handleSideHustle('Tutoring', 75, 'High School')">Tutoring (Requires High School, $75/day)</button></li>
+                    <li><button class="w-full text-left py-2 px-4 rounded hover:bg-gray-300" onclick="handleSideHustle('Selling Handmade Goods', 30)">Selling Handmade Goods (No Requirements, $30/day)</button></li>
+                    <li><button class="w-full text-left py-2 px-4 rounded hover:bg-gray-300" onclick="handleSideHustle('Photography', 150, 'Camera')">Photography (Requires Camera, $150/day)</button></li>
+                </ul>
+            </div>
+
+            <!-- CRIME -->
+            <div id="crime-options" class="hidden mt-4 bg-gray-100 p-4 rounded border">
+                <h4 class="font-bold text-lg">Choose Your Criminal Work</h4>
+                <ul class="space-y-2">
+                    <li><button class="w-full text-left py-2 px-4 rounded hover:bg-gray-300" onclick="handleCrime('Pickpocketing', 20, 10)">Pickpocketing (Risk: Low, $20)</button></li>
+                    <li><button class="w-full text-left py-2 px-4 rounded hover:bg-gray-300" onclick="handleCrime('Shoplifting', 50, 25)">Shoplifting (Risk: Medium, $50)</button></li>
+                    <li><button class="w-full text-left py-2 px-4 rounded hover:bg-gray-300" onclick="handleCrime('Scamming', 300, 40, 'Laptop')">Scamming (Requires Laptop, Risk: High, $300)</button></li>
+                    <li><button class="w-full text-left py-2 px-4 rounded hover:bg-gray-300" onclick="handleCrime('Hacking', 1000, 60, 'Laptop')">Hacking (Requires Laptop, Risk: Very High, $1000)</button></li>
+                    <li><button class="w-full text-left py-2 px-4 rounded hover:bg-gray-300" onclick="handleCrime('Robbery', 2000, 75)">Robbery (Risk: Extreme, $2000)</button></li>
+                </ul>
+            </div>
+
+            <!-- SCHOOL -->
+            <div id="school-options" class="hidden mt-4 bg-gray-100 p-4 rounded border">
+                <h4 class="font-bold text-lg">Choose Your School</h4>
+                <ul class="space-y-2">
+                    <li><button class="w-full text-left py-2 px-4 rounded hover:bg-gray-300" onclick="enrollInSchool('Elementary School', 100, 'Elementary')">Elementary School ($100)</button></li>
+                    <li><button class="w-full text-left py-2 px-4 rounded hover:bg-gray-300" onclick="enrollInSchool('Middle School', 200, 'Middle')">Middle School ($200)</button></li>
+                    <li><button class="w-full text-left py-2 px-4 rounded hover:bg-gray-300" onclick="enrollInSchool('High School', 500, 'High School')">High School ($500)</button></li>
+                    <li><button class="w-full text-left py-2 px-4 rounded hover:bg-gray-300" onclick="enrollInSchool('College', 1000, 'College')">College ($1000)</button></li>
+                    <li><button class="w-full text-left py-2 px-4 rounded hover:bg-gray-300" onclick="enrollInSchool('University', 5000, 'University')">University ($5000)</button></li>
+                </ul>
+            </div>
+
+            <!-- FOOD -->
+            <div id="food-options" class="hidden mt-4 bg-gray-100 p-4 rounded border">
+                <h4 class="font-bold text-lg">Choose Your Food</h4>
+                <ul class="space-y-2">
+                    <li><button class="w-full text-left py-2 px-4 rounded hover:bg-gray-300" onclick="purchaseFood('Fast Food', 10, 5)">Fast Food ($10, +5 Health)</button></li>
+                    <li><button class="w-full text-left py-2 px-4 rounded hover:bg-gray-300" onclick="purchaseFood('Home Cooked Meal', 15, 10)">Home Cooked Meal ($15, +10 Health)</button></li>
+                    <li><button class="w-full text-left py-2 px-4 rounded hover:bg-gray-300" onclick="purchaseFood('Gourmet Meal', 50, 25)">Gourmet Meal ($50, +25 Health)</button></li>
+                    <li><button class="w-full text-left py-2 px-4 rounded hover:bg-gray-300" onclick="purchaseFood('Street Food', 5, 3)">Street Food ($5, +3 Health)</button></li>
+                    <li><button class="w-full text-left py-2 px-4 rounded hover:bg-gray-300" onclick="purchaseFood('Snacks', 3, 2)">Snacks ($3, +2 Health)</button></li>
+                </ul>
+            </div>
+
+            <!-- STORE -->
+            <div id="store-options" class="hidden mt-4 bg-gray-100 p-4 rounded border">
+                <h4 class="font-bold text-lg">Store</h4>
+                <ul class="space-y-2">
+                    <li><button class="w-full text-left py-2 px-4 rounded hover:bg-gray-300" onclick="purchaseItem('Tent', 20)">Tent ($20)</button></li>
+                    <li><button class="w-full text-left py-2 px-4 rounded hover:bg-gray-300" onclick="purchaseItem('Snacks', 3)">Snacks ($3)</button></li>
+                    <li><button class="w-full text-left py-2 px-4 rounded hover:bg-gray-300" onclick="purchaseItem('Laptop', 300)">Laptop ($300)</button></li>
+                    <li><button class="w-full text-left py-2 px-4 rounded hover:bg-gray-300" onclick="purchaseItem('Books', 10)">Books ($10)</button></li>
+                    <li><button class="w-full text-left py-2 px-4 rounded hover:bg-gray-300" onclick="purchaseItem('Pencil Case', 5)">Pencil Case ($5)</button></li>
+                    <li><button class="w-full text-left py-2 px-4 rounded hover:bg-gray-300" onclick="purchaseItem('Prayer Mat', 15)">Prayer Mat ($15)</button></li>
+                    <li><button class="w-full text-left py-2 px-4 rounded hover:bg-gray-300" onclick="purchaseItem('Bike', 100)">Bike ($100)</button></li>
+                </ul>
+            </div>
+
+            <!-- SANITY -->
+            <div id="sanity-options" class="hidden mt-4 bg-gray-100 p-4 rounded border">
+                <h4 class="font-bold text-lg">Maintain Your Sanity</h4>
+                <ul class="space-y-2">
+                    <li><button class="w-full text-left py-2 px-4 rounded hover:bg-gray-300" onclick="maintainSanity('Meditation', 10, 0)">Meditation (Free, +10 Sanity)</button></li>
+                    <li><button class="w-full text-left py-2 px-4 rounded hover:bg-gray-300" onclick="maintainSanity('Exercise', 15, 0)">Exercise (Free, +15 Sanity)</button></li>
+                    <li><button class="w-full text-left py-2 px-4 rounded hover:bg-gray-300" onclick="maintainSanity('Socialize', 20, 10)">Socialize ($10, +20 Sanity)</button></li>
+                    <li><button class="w-full text-left py-2 px-4 rounded hover:bg-gray-300" onclick="maintainSanity('Therapy', 50, 50)">Therapy ($50, +50 Sanity)</button></li>
+                    <li><button class="w-full text-left py-2 px-4 rounded hover:bg-gray-300" onclick="maintainSanity('Make Salah', 25, 0, 'Prayer Mat')">Make Salah (Requires Prayer Mat, +25 Sanity)</button></li>
+                </ul>
+            </div>
+
+            <!-- BUSINESS -->
+            <div id="business-options" class="hidden mt-4 bg-gray-100 p-4 rounded border">
+                <h4 class="font-bold text-lg">Start or Manage Your Business</h4>
+                <ul class="space-y-2">
+                    <li>
+                        <button class="w-full text-left py-2 px-4 rounded hover:bg-gray-300"
+                            onclick="startBusiness('Lemonade Stand', 250, 50)">
+                            Lemonade Stand (Start for $250, earns $50/day)
+                        </button>
+                    </li>
+                    <li>
+                        <button class="w-full text-left py-2 px-4 rounded hover:bg-gray-300"
+                            onclick="startBusiness('Food Truck', 5000, 600)">
+                            Food Truck (Start for $5,000, earns $600/day)
+                        </button>
+                    </li>
+                    <li>
+                        <button class="w-full text-left py-2 px-4 rounded hover:bg-gray-300"
+                            onclick="startBusiness('Online Store', 15000, 1200)">
+                            Online Store (Start for $15,000, earns $1,200/day)
+                        </button>
+                    </li>
+                </ul>
+                <div class="mt-4">
+                    <button class="w-full text-left py-2 px-4 bg-green-500 text-white rounded hover:bg-green-600"
+                        onclick="collectBusinessIncome()">
+                        Collect Business Income
+                    </button>
+                </div>
+                <div class="mt-2 text-sm text-gray-600" id="business-info"></div>
+                <div class="mt-2 text-sm text-yellow-700" id="business-tax-info"></div>
+            </div>
+
+            <!-- OFFICE -->
+            <div id="office-options" class="hidden mt-4 bg-gray-100 p-4 rounded border">
+                <h4 class="font-bold text-lg">Office</h4>
+                <ul class="space-y-2">
+                    <li>
+                        <button class="w-full text-left py-2 px-4 rounded hover:bg-blue-600 bg-blue-500 text-white" onclick="payGovernmentToReduceNotoriety()">
+                            Pay Government $500 to Reduce Notoriety by 20
+                        </button>
+                    </li>
+                    <li>
+                        <button class="w-full text-left py-2 px-4 rounded hover:bg-green-700 bg-green-600 text-white" onclick="payAllBusinessTaxes()">
+                            Pay All Business Taxes Owed
+                        </button>
+                    </li>
+                    <li>
+                        <button class="w-full text-left py-2 px-4 rounded hover:bg-yellow-700 bg-yellow-600 text-white" onclick="hireEliteAccountant()">
+                            Hire Elite Accountant $5000 (Lasts 14 Days, Save 5% on Next Taxes)
+                        </button>
+                    </li>
+                </ul>
+                <p class="text-sm text-blue-700 mt-2">Pay government to reduce notoriety, pay your business taxes, or hire an elite accountant here!</p>
+                <div class="mt-2 text-sm text-red-700" id="office-tax-warning"></div>
+                <div class="mt-2 text-sm text-green-700" id="accountant-status"></div>
+            </div>
+        </section>
+    </main>
+    <script>
+        // ---- GLOBALS ----
+        let money = 100;
+        let health = 100;
+        let sanity = 100;
+        let notoriety = 0;
+        let currentHousing = 'Streets';
+        let playerName = "";
+        let day = 1;
+        const educationLevels = { 'Elementary': false, 'Middle': false, 'High School': false, 'College': false, 'University': false };
+        const backpackItems = {
+            'Tent': false,
+            'Snacks': false,
+            'Laptop': false,
+            'Books': false,
+            'Pencil Case': false,
+            'Bike': false,
+            'Car': false,
+            'Camera': false,
+            'Prayer Mat': false
+        };
+        let businesses = {};
+        let businessIncomes = {};
+        let uncollectedBusinessIncome = 0;
+        let businessTaxRecords = {};
+        let eliteAccountantDaysLeft = 0;
+        let eliteAccountantActive = false;
+
+        // ---- DOM ----
+        const moneyBalance = document.getElementById('money-balance');
+        const healthLevel = document.getElementById('health-level');
+        const sanityLevel = document.getElementById('sanity-level');
+        const notorietyLevel = document.getElementById('notoriety-level');
+        const dayCounter = document.getElementById('day-counter');
+        const backpackList = document.getElementById('backpack-list');
+        const educationList = document.getElementById('education-list');
+        const businessInfo = document.getElementById('business-info');
+        const businessTaxInfo = document.getElementById('business-tax-info');
+        const officeTaxWarning = document.getElementById('office-tax-warning');
+        
+// ---- UNIVERSAL BUTTON/TAB CLICK SOUND ----
+        document.addEventListener('click', function(e) {
+            if (e.target.tagName === "BUTTON") {
+                var audio = document.getElementById('tab-sound');
+                if(audio) { audio.currentTime = 0; audio.play(); }
+            }
+        });
+        // ---- MENUS ----
+        const menuIds = [
+            'housing-options', 'work-options', 'side-hustles-options', 'crime-options',
+            'food-options', 'store-options', 'school-options', 'sanity-options',
+            'business-options', 'office-options'
+        ];
+        function closeAllMenus() {
+            menuIds.forEach(id => {
+                const el = document.getElementById(id);
+                if (el) el.classList.add('hidden');
+            });
+        }
+        function openMenu(id) {
+            closeAllMenus();
+            const el = document.getElementById(id);
+            if (el) el.classList.toggle('hidden');
+            // play tab click sound
+            var audio = document.getElementById('tab-sound');
+            if(audio) {
+                audio.currentTime = 0;
+                audio.play();
+            }
+        }
+
+        // ---- GAME STATE ----
+        function saveGame() {
+            const state = {
+                money, health, sanity, notoriety,
+                day, currentHousing, playerName,
+                educationLevels: {...educationLevels},
+                backpackItems: {...backpackItems},
+                businesses: {...businesses},
+                businessIncomes: {...businessIncomes},
+                uncollectedBusinessIncome,
+                businessTaxRecords: JSON.parse(JSON.stringify(businessTaxRecords)),
+                eliteAccountantDaysLeft,
+                eliteAccountantActive
+            };
+            localStorage.setItem('dunyaLifeSave', JSON.stringify(state));
+        }
+        function loadGame() {
+            const state = JSON.parse(localStorage.getItem('dunyaLifeSave'));
+            if (!state) return false;
+            money = state.money;
+            health = state.health;
+            sanity = state.sanity;
+            notoriety = state.notoriety;
+            day = state.day || 1;
+            currentHousing = state.currentHousing;
+            playerName = state.playerName || "";
+            Object.assign(educationLevels, state.educationLevels || {});
+            Object.assign(backpackItems, state.backpackItems || {});
+            businesses = {...(state.businesses || {})};
+            businessIncomes = {...(state.businessIncomes || {})};
+            uncollectedBusinessIncome = state.uncollectedBusinessIncome || 0;
+            businessTaxRecords = state.businessTaxRecords || {};
+            eliteAccountantDaysLeft = state.eliteAccountantDaysLeft || 0;
+            eliteAccountantActive = state.eliteAccountantActive || false;
+            return true;
+        }
+
+        // ---- STATS ----
+        function updateMoney(amount) {
+            money += amount;
+            if (money < 0) money = 0;
+            saveGame();
+            updateDisplay();
+        }
+        function updateHealth(amount) {
+            health = Math.min(100, Math.max(0, health + amount));
+            saveGame();
+            updateDisplay();
+        }
+        function updateSanity(amount) {
+            sanity = Math.min(100, Math.max(0, sanity + amount));
+            saveGame();
+            updateDisplay();
+        }
+        function updateNotoriety(amount) {
+            notoriety = Math.min(100, Math.max(0, notoriety + amount));
+            saveGame();
+            updateDisplay();
+            if (notoriety >= 100) {
+                // Notoriety 100+ sound
+                var errorAudio = document.getElementById('error-sound');
+                if (errorAudio) { errorAudio.currentTime = 0; errorAudio.play(); }
+                alert('Your notoriety is too high! The authorities have taken all your money, removed all your items and businesses, and you are forced back on the streets!');
+                money = 0;
+                currentHousing = 'Streets';
+                notoriety = 0;
+                for (let key in backpackItems) { backpackItems[key] = false; }
+                for (let key in businesses) { businesses[key] = false; }
+                businessIncomes = {};
+                uncollectedBusinessIncome = 0;
+                businessTaxRecords = {};
+                saveGame();
+                updateDisplay();
+            }
+        }
+
+        // ---- DISPLAY ----
+        function updateDisplay() {
+            moneyBalance.textContent = `$${money}`;
+            healthLevel.textContent = health;
+            sanityLevel.textContent = sanity;
+            notorietyLevel.textContent = notoriety;
+            dayCounter.textContent = day;
+            document.getElementById('user-name').textContent = playerName;
+            backpackList.innerHTML = '';
+            for (const [item, owned] of Object.entries(backpackItems)) {
+                if (owned) {
+                    const li = document.createElement('li');
+                    li.textContent = item;
+                    backpackList.appendChild(li);
+                }
+            }
+            if (backpackList.childElementCount === 0) {
+                const li = document.createElement('li');
+                li.textContent = "Nothing acquired yet.";
+                backpackList.appendChild(li);
+            }
+            educationList.innerHTML = '';
+            for (const [level, passed] of Object.entries(educationLevels)) {
+                const li = document.createElement('li');
+                li.textContent = level + (passed ? " ✔️" : "");
+                educationList.appendChild(li);
+            }
+            updateBusinessInfo();
+            updateBusinessTaxInfo();
+            updateOfficeTaxWarning();
+            updateAccountantStatus();
+        }
+
+        // ---- BUSINESS ----
+        function startBusiness(name, cost, dailyIncome) {
+            if (businesses[name]) {
+                alert(`You already own a ${name}.`);
+                return;
+            }
+            if (money < cost) {
+                alert(`Not enough money to start a ${name}.`);
+                return;
+            }
+            updateMoney(-cost);
+            businesses[name] = true;
+            businessIncomes[name] = dailyIncome;
+            if (!businessTaxRecords[name]) {
+                businessTaxRecords[name] = {
+                    earnedLast30: 0,
+                    daysSinceTax: 0,
+                    taxesOwed: 0,
+                    overdueDays: 0
+                };
+            }
+            saveGame();
+            updateBusinessInfo();
+            updateBusinessTaxInfo();
+            updateDisplay();
+            alert(`You started a ${name}! You will earn $${dailyIncome} each day (collected after sleeping).`);
+        }
+        function collectBusinessIncome() {
+            if (uncollectedBusinessIncome > 0) {
+                updateMoney(uncollectedBusinessIncome);
+                alert(`You have collected $${uncollectedBusinessIncome} from your business(es)!`);
+                uncollectedBusinessIncome = 0;
+                updateBusinessInfo();
+                saveGame();
+                updateDisplay();
+            } else {
+                alert("You have no business income to collect yet.");
+            }
+        }
+        function updateBusinessInfo() {
+            let owned = Object.keys(businesses).filter(b => businesses[b]);
+            if (owned.length === 0) {
+                businessInfo.textContent = "You don't own any businesses yet.";
+            } else {
+                businessInfo.innerHTML = "<b>Owned businesses:</b> " + owned.join(', ') +
+                    "<br><b>Uncollected income:</b> $" + uncollectedBusinessIncome;
+            }
+        }
+        function updateBusinessTaxInfo() {
+            let info = "";
+            let owned = Object.keys(businesses).filter(b => businesses[b]);
+            owned.forEach(biz => {
+                let rec = businessTaxRecords[biz];
+                if (!rec) return;
+                if (rec.taxesOwed > 0) {
+                    info += `<b>${biz}:</b> Owes $${rec.taxesOwed.toFixed(2)} in taxes (${rec.overdueDays > 0 ? rec.overdueDays + " days overdue" : "due"}).<br/>`;
+                }
+            });
+            businessTaxInfo.innerHTML = info ? info : "No taxes owed by your businesses currently.";
+        }
+        function updateOfficeTaxWarning() {
+            let warning = "";
+            let owned = Object.keys(businesses).filter(b => businesses[b]);
+            owned.forEach(biz => {
+                let rec = businessTaxRecords[biz];
+                if (!rec) return;
+                if (rec.taxesOwed > 0 && rec.overdueDays > 0) {
+                    warning += `<b>${biz}:</b> Taxes overdue by ${rec.overdueDays} days!<br/>`;
+                }
+            });
+            officeTaxWarning.innerHTML = warning ? warning : "";
+        }
+        function payAllBusinessTaxes() {
+            let totalDue = 0;
+            let owned = Object.keys(businesses).filter(b => businesses[b]);
+            owned.forEach(biz => {
+                let rec = businessTaxRecords[biz];
+                if (rec && rec.taxesOwed > 0) {
+                    totalDue += rec.taxesOwed;
+                }
+            });
+            if (totalDue === 0) {
+                alert("You have no business taxes due.");
+                return;
+            }
+            if (money < totalDue) {
+                alert("You do not have enough money to pay all business taxes.");
+                return;
+            }
+            owned.forEach(biz => {
+                let rec = businessTaxRecords[biz];
+                if (rec && rec.taxesOwed > 0) {
+                    updateMoney(-rec.taxesOwed);
+                    rec.taxesOwed = 0;
+                    rec.overdueDays = 0;
+                }
+            });
+            saveGame();
+            updateBusinessTaxInfo();
+            updateOfficeTaxWarning();
+            updateDisplay();
+            alert(`You paid $${totalDue.toFixed(2)} in business taxes. All tax debts cleared!`);
+        }
+        // Elite Accountant
+        function updateAccountantStatus() {
+            const el = document.getElementById('accountant-status');
+            if (eliteAccountantActive && eliteAccountantDaysLeft > 0) {
+                el.textContent = `Elite Accountant active: ${eliteAccountantDaysLeft} day(s) left. Next tax bill is discounted 5%.`;
+            } else {
+                el.textContent = "No elite accountant currently hired.";
+            }
+        }
+        function hireEliteAccountant() {
+            if (eliteAccountantActive && eliteAccountantDaysLeft > 0) {
+                alert(`You already have an elite accountant for ${eliteAccountantDaysLeft} more day(s)!`);
+                return;
+            }
+            if (money < 5000) {
+                alert("You don't have enough money to hire the elite accountant!");
+                return;
+            }
+            updateMoney(-5000);
+            eliteAccountantDaysLeft = 14;
+            eliteAccountantActive = true;
+            saveGame();
+            updateAccountantStatus();
+            updateDisplay();
+            alert("You have hired an elite accountant! Next business tax bill in the next 14 days will be discounted by 5%.");
+        }
+
+        // ---- ACTIONS ----
+        document.getElementById('start-game').addEventListener('click', () => {
+            const usernameInput = document.getElementById('username');
+            const username = usernameInput.value.trim();
+            if (!username) {
+                alert('Please enter a name to start the game.');
+                return;
+            }
+            closeAllMenus();
+            playerName = username;
+            document.getElementById('user-name').textContent = playerName;
+            document.getElementById('create-user').classList.add('hidden');
+            document.getElementById('gameplay').classList.remove('hidden');
+            document.getElementById('sidebar').classList.remove('locked');
+            saveGame();
+            updateDisplay();
+        });
+
+        function handleCrime(crime, reward, risk, requiredItem = null) {
+            if (requiredItem && !backpackItems[requiredItem]) {
+                alert(`You need a ${requiredItem} for ${crime}.`);
+                return;
+            }
+            let gainNotoriety = 10;
+            let loseMoney = 0;
+            if (crime === "Pickpocketing") { gainNotoriety = 10; loseMoney = 5; }
+            if (crime === "Shoplifting") { gainNotoriety = 20; loseMoney = 15; }
+            if (crime === "Scamming") { gainNotoriety = 30; loseMoney = 50; }
+            if (crime === "Hacking") { gainNotoriety = 40; loseMoney = 100; }
+            if (crime === "Robbery") { gainNotoriety = 50; loseMoney = 500; }
+            if (risk > Math.random() * 100) {
+                alert(`${crime} failed! You were caught.`);
+                updateNotoriety(gainNotoriety);
+                updateHealth(-10);
+                updateSanity(-10);
+                updateMoney(-loseMoney);
+                return;
+            }
+            updateMoney(reward);
+            updateSanity(-10);
+            updateHealth(-7);
+            updateNotoriety(gainNotoriety);
+            updateMoney(-loseMoney);
+            alert(`${crime} was successful! You earned $${reward}, but lost some health, sanity, and paid $${loseMoney} in bribes/fines.`);
+        }
+
+        function purchaseTransportation(item, cost) {
+            if (money < cost) {
+                alert(`Not enough money to purchase a ${item}.`);
+                return;
+            }
+            if (backpackItems[item]) {
+                alert(`You already own a ${item}.`);
+                return;
+            }
+            updateMoney(-cost);
+            backpackItems[item] = true;
+            saveGame();
+            updateDisplay();
+            alert(`You purchased a ${item}!`);
+        }
+
+        function handleSideHustle(hustle, reward, requiredItem = null) {
+            if (requiredItem && (!backpackItems[requiredItem] && !educationLevels[requiredItem])) {
+                alert(`You need a ${requiredItem} for ${hustle}.`);
+                return;
+            }
+            if (sanity < 10 || health < 10) {
+                // Too tired to do side hustle sound
+                var coughAudio = document.getElementById('cough-sound');
+                if (coughAudio) { coughAudio.currentTime = 0; coughAudio.play(); }
+                alert("You don't have enough energy or sanity for side hustles. Rest or restore yourself first!");
+                return;
+            }
+            updateMoney(reward);
+            updateSanity(-7);
+            updateHealth(-3);
+            alert(`${hustle} completed successfully! You earned $${reward}, but lost some health and sanity.`);
+        }
+
+        function enrollInSchool(school, cost, level) {
+            if (money < cost) {
+                alert(`Not enough money to enroll in ${school}.`);
+                return;
+            }
+            if (educationLevels[level]) {
+                alert(`You have already completed ${school}.`);
+                return;
+            }
+            const prerequisites = {
+                'Middle': 'Elementary',
+                'High School': 'Middle',
+                'College': 'High School',
+                'University': 'College',
+            };
+            if (prerequisites[level] && !educationLevels[prerequisites[level]]) {
+                alert(`You must complete ${prerequisites[level]} before enrolling in ${school}.`);
+                return;
+            }
+            updateMoney(-cost);
+            educationLevels[level] = true;
+            saveGame();
+            updateDisplay();
+            alert(`You have successfully enrolled in and completed ${school}!`);
+        }
+
+         function chooseJob(job, salary, requirements) {
+            if (!Array.isArray(requirements)) requirements = [requirements];
+            for (const requirement of requirements) {
+                if (!(educationLevels[requirement] || backpackItems[requirement])) {
+                    alert(`You need ${requirement} to work in ${job}.`);
+                    return;
+                }
+            }
+            if (sanity < 10 || health < 10) {
+                // Too tired to work sound
+                var coughAudio = document.getElementById('cough-sound');
+                if (coughAudio) { coughAudio.currentTime = 0; coughAudio.play(); }
+                alert("You don't have enough energy or sanity to work. Rest or restore yourself first!");
+                return;
+            }
+            updateMoney(salary);
+            updateSanity(-10);
+            updateHealth(-5);
+            alert(`You worked as a ${job} and earned $${salary}, but lost some health and sanity.`);
+
+        function purchaseFood(food, cost, healthGain) {
+            if (money < cost) {
+                alert(`Not enough money to purchase ${food}.`);
+                return;
+            }
+            updateMoney(-cost);
+            updateHealth(healthGain);
+            alert(`You purchased ${food} and gained ${healthGain} health!`);
+        }
+
+        function purchaseItem(item, cost) {
+            if (money < cost) {
+                alert(`Not enough money to purchase ${item}.`);
+                return;
+            }
+            if (backpackItems[item]) {
+                alert(`You already own a ${item}.`);
+                return;
+            }
+            updateMoney(-cost);
+            backpackItems[item] = true;
+            saveGame();
+            updateDisplay();
+            alert(`You purchased ${item}!`);
+        }
+
+        function chooseHousing(housing, cost, requiredItem = null) {
+            if (cost > 0 && money < cost) {
+                alert(`Not enough money for ${housing}.`);
+                return;
+            }
+            if (requiredItem && !backpackItems[requiredItem]) {
+                alert(`You need a ${requiredItem} from your Store for this housing.`);
+                return;
+            }
+            if (cost > 0) updateMoney(-cost);
+            currentHousing = housing;
+            saveGame();
+            updateDisplay();
+            alert(`You now live in a ${housing}.`);
+        }
+
+        function sleep() {
+            // Rooster sound
+            var roosterAudio = document.getElementById('rooster-sound');
+            if (roosterAudio) { roosterAudio.currentTime = 0; roosterAudio.play(); }
+            
+            // ... your usual sleep logic ...
+            let healthRestored, sanityRestored;
+            switch (currentHousing) {
+                case 'Streets':   healthRestored = 5; sanityRestored = 2; break;
+                case 'Tent':      healthRestored = 10; sanityRestored = 5; break;
+                case 'Motel':     healthRestored = 20; sanityRestored = 10; break;
+                case 'Hotel':     healthRestored = 30; sanityRestored = 15; break;
+                case 'Roommate':  healthRestored = 40; sanityRestored = 18; break;
+                case 'Apartment': healthRestored = 50; sanityRestored = 20; break;
+                case 'House':     healthRestored = 75; sanityRestored = 25; break;
+                case 'Mansion':   healthRestored = 100; sanityRestored = 30; break;
+                default:          healthRestored = 0; sanityRestored = 0;
+            }
+            updateHealth(healthRestored);
+            updateSanity(sanityRestored);
+
+            // BUSINESS/TAX LOGIC as before...
+            day += 1;
+            Object.keys(businesses).forEach(biz => {
+                if (businesses[biz]) {
+                    if (!businessTaxRecords[biz]) {
+                        businessTaxRecords[biz] = {
+                            earnedLast30: 0,
+                            daysSinceTax: 0,
+                            taxesOwed: 0,
+                            overdueDays: 0
+                        };
+                    }
+                    let income = businessIncomes[biz] || 0;
+                    uncollectedBusinessIncome += income;
+                    businessTaxRecords[biz].earnedLast30 += income;
+                    businessTaxRecords[biz].daysSinceTax += 1;
+                }
+            });
+
+            // Every 30 days, play siren and handle taxes
+            if (day % 30 === 0) {
+                var sirenAudio = document.getElementById('siren-sound');
+                if (sirenAudio) { sirenAudio.currentTime = 0; sirenAudio.play(); }
+                Object.keys(businessTaxRecords).forEach(biz => {
+                    let rec = businessTaxRecords[biz];
+                    if (!rec) return;
+                    if (rec.daysSinceTax >= 30) {
+                        let newTax = rec.earnedLast30 * 0.06;
+                        // Accountant discount
+                        if (eliteAccountantActive && eliteAccountantDaysLeft > 0) {
+                            newTax *= 0.95;
+                            eliteAccountantActive = false;
+                            eliteAccountantDaysLeft = 0;
+                            alert(`Your elite accountant has saved you 5% on your ${biz} taxes!`);
+                        }
+                        rec.taxesOwed += newTax;
+                        rec.earnedLast30 = 0;
+                        rec.daysSinceTax = 0;
+                    }
+                    // If taxes owed and not paid, increment overdue
+                    if (rec.taxesOwed > 0) {
+                        rec.overdueDays += 1;
+                        if (rec.overdueDays > 30) {
+                            updateNotoriety(10);
+                        }
+                    } else {
+                        rec.overdueDays = 0;
+                    }
+                });
+            }
+
+            // Elite Accountant: reduce active days
+            if (eliteAccountantActive) {
+                eliteAccountantDaysLeft -= 1;
+                if (eliteAccountantDaysLeft <= 0) {
+                    eliteAccountantActive = false;
+                    eliteAccountantDaysLeft = 0;
+                    alert("Your elite accountant's contract has ended.");
+                }
+            }
+            saveGame();
+            updateAccountantStatus();
+            updateDisplay();
+            alert(`You slept in your ${currentHousing}, restored ${healthRestored} health and ${sanityRestored} sanity. A new day begins!`);
+        }
+
+        function maintainSanity(action, sanityGain, cost, requiredItem = null) {
+            if (cost > 0 && money < cost) {
+                alert(`Not enough money for ${action}.`);
+                return;
+            }
+            if (requiredItem && !backpackItems[requiredItem]) {
+                alert(`You need a ${requiredItem} for ${action}.`);
+                return;
+            }
+            if (cost > 0) updateMoney(-cost);
+            updateSanity(sanityGain);
+            alert(`${action} performed! You gained ${sanityGain} sanity.`);
+        }
+
+        function payGovernmentToReduceNotoriety() {
+            if (money < 500) {
+                alert("You don't have enough money to pay the government!");
+                return;
+            }
+            updateMoney(-500);
+            updateNotoriety(-20);
+            alert("You paid the government $500. Your notoriety has been reduced by 20.");
+        }
+
+        // ---- LOAD ----
+        window.onload = function() {
+            if (loadGame()) {
+                document.getElementById('user-name').textContent = playerName;
+                document.getElementById('create-user').classList.add('hidden');
+                document.getElementById('gameplay').classList.remove('hidden');
+                document.getElementById('sidebar').classList.remove('locked');
+            }
+            updateDisplay();
+        }
+    </script>
+</body>
+</html>
